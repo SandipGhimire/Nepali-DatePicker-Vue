@@ -56,46 +56,6 @@ const selectedDate = ref('');
 | `classValue` | `String` | `''` | Additional CSS class for the input element |
 | `placeholder` | `String` | `''` | Placeholder text for the input element |
 
-## Date Conversion Utilities
-
-The package also provides utility functions for converting between AD (Gregorian) and BS (Nepali) dates:
-
-```javascript
-import { ADtoBS, BStoAD } from 'nepali-datepicker-vue3';
-
-// Convert AD to BS
-const bsDate = ADtoBS('2023-05-15');  // Returns: '2080-02-01'
-
-// Convert BS to AD
-const adDate = BStoAD('2080-02-01');  // Returns: '2023-05-15'
-```
-
-### ADtoBS
-
-Converts an Anno Domini (AD) date to a Bikram Sambat (BS) date.
-
-```typescript
-/**
- * Converts a Anno Domini (AD) date to an Bikram Sambat(BS) Date.
- * @param {string} adDate - The Anno Domini (AD) date in "YYYY-MM-DD" format.
- * @returns {string} - The corresponding Bikram Sambat(BS) date in "YYYY-MM-DD" format.
- */
-export const ADtoBS = (adDate: string): string;
-```
-
-### BStoAD
-
-Converts a Bikram Sambat (BS) date to an Anno Domini (AD) date.
-
-```typescript
-/**
- * Converts a Bikram Sambat(BS) to an Anno Domini (AD) Date.
- * @param bsDate - The Bikram Sambat(BS) date in "YYYY-MM-DD" format.
- * @returns {string} - The corresponding Anno Domini (AD) date in "YYYY-MM-DD" format.
- */
-export function BStoAD(bsDate: string): string;
-```
-
 ## Browser Support
 
 The component supports all modern browsers that are compatible with Vue 3.
