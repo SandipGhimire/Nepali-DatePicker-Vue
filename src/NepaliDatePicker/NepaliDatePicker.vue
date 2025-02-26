@@ -137,6 +137,7 @@ const props = defineProps({
 // Emit modelValue update event
 const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
+    (e: 'onSelect', value: string): void;
 }>();
 
 // Refs
@@ -402,6 +403,7 @@ const select = (selectedDate: NepaliDate) => {
     date.value = selectedDate;
     formatedValue.value = date.value.format('YYYY-MM-DD');
     emit('update:modelValue', formatedValue.value);
+    emit('onSelect', formatedValue.value);
     toggleCalendar();
 };
 
@@ -445,6 +447,7 @@ const resetClear = () => {
     showYear.value = false
     date.value = new NepaliDate();
     emit('update:modelValue', '');
+    emit('onSelect', '');
     toggleCalendar(false, true);
 }
 
