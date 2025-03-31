@@ -14,7 +14,7 @@ A Vue 3 component for selecting dates in the Nepali calendar (Bikram Sambat).
 ## Installation
 
 ```bash
-npm install vue-nepali-datepicker
+npm install nepali-datepicker-vue
 ```
 
 ## Dependency
@@ -28,7 +28,7 @@ npm install vue-nepali-datepicker
 Make sure to import the CSS styles in your main entry file (e.g., `main.ts` or `main.js`):
 
 ```ts
-import 'vue-nepali-datepicker/main.css';
+import 'nepali-datepicker-vue/main.css';
 ```
 
 ## Initialization Example
@@ -44,7 +44,7 @@ import 'vue-nepali-datepicker/main.css';
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { NepaliDatePicker } from 'vue-nepali-datepicker';
+import { NepaliDatePicker } from 'nepali-datepicker-vue';
 
 const selectedDate = ref('');
 </script>
