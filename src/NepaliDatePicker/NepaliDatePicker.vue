@@ -468,11 +468,11 @@ onUnmounted(() => {
 .calendar-input-div .calendar-input-icon {
     position: absolute;
     top: 50%;
-    right: 0px;
+    right: 8px;
     transform: translateY(-50%);
     font-size: 16px;
     line-height: 0;
-    color: currentColor;
+    color: rgba(0, 0, 0, .5);
     vertical-align: middle;
     fill: currentColor;
     stroke: currentColor;
