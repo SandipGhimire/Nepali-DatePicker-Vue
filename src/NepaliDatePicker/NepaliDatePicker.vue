@@ -461,23 +461,27 @@ onUnmounted(() => {
 .nepali-datepicker {
     font: 14px/1.5 "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", sans-serif;
 }
+.calendar-input-div{
+    position: relative;
+}
 
 .calendar-input-div .calendar-input-icon {
     position: absolute;
     top: 50%;
-    right: 8px;
+    right: 0px;
     transform: translateY(-50%);
     font-size: 16px;
     line-height: 0;
-    color: #5a5a5a;
+    color: currentColor;
     vertical-align: middle;
-    fill: #5a5a5a;
-    stroke: #5a5a5a;
+    fill: currentColor;
+    stroke: currentColor;
     cursor: pointer;
 }
 
 .calendar-input-div .calendar-input {
     height: 24px;
+    width: 100%;
     z-index: inherit;
     border: 1px solid #9e9e9e;
 }
