@@ -459,7 +459,6 @@ onUnmounted(() => {
 <style scoped>
 /* Date Picker CSS */
 .nepali-datepicker {
-    position: relative;
     font: 14px/1.5 "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", sans-serif;
 }
 
