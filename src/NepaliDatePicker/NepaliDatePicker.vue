@@ -1,7 +1,7 @@
 <template>
-    <div class="nepali-datepicker" :key="date_id">
+    <div class="nepali-datepicker" :key="date_id" :class="props.class">
         <div class="calendar-input-div" :class="modelValue ? 'calendar-input-contain-value' : ''">
-            <input type="text" class="calendar-input" :class="classValue" @click="toggleCalendar(true)"
+            <input type="text" class="calendar-input" @click="toggleCalendar(true)"
                 v-model="formatedValue" :placeholder="placeholder" aria-haspopup="true"
                 :id="'nepali-date-input-' + date_id" @keyup.enter="updateInputtedValue()" />
             <div class="calendar-input-icon calender-icon" @click.stop="toggleCalendar(true)">
@@ -124,7 +124,7 @@ const props = defineProps({
         type: Boolean,
         default: true
     },
-    classValue: {
+    class: {
         type: String,
         default: '',
     },
@@ -461,13 +461,6 @@ onUnmounted(() => {
 .nepali-datepicker {
     position: relative;
     font: 14px/1.5 "Helvetica Neue", Helvetica, Arial, "Microsoft Yahei", sans-serif;
-    width: fit-content;
-}
-
-/* Input CSS */
-.calendar-input-div {
-    position: relative;
-    width: fit-content;
 }
 
 .calendar-input-div .calendar-input-icon {
@@ -509,10 +502,9 @@ onUnmounted(() => {
 
 /* Calender CS */
 .calendar {
-    z-index: 9;
+    z-index: 2001;
     position: absolute;
     width: 248px;
-    top: 100%;
     box-shadow: 0 6px 12px rgba(0, 0, 0, .175);
     background: #fff;
     visibility: hidden;

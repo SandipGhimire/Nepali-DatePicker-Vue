@@ -57,7 +57,7 @@ const selectedDate = ref('');
 | `modelValue` | `String` | `''` | v-model binding for the selected date (YYYY-MM-DD format) |
 | `yearSelect` | `Boolean` | `true` | Enable/disable year selection |
 | `monthSelect` | `Boolean` | `true` | Enable/disable month selection |
-| `classValue` | `String` | `''` | Additional CSS class for the input element |
+| `class` | `String` | `''` | Additional CSS class for the input element |
 | `placeholder` | `String` | `''` | Placeholder text for the input element |
 
 ## Events
