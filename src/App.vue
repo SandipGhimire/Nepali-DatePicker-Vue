@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div style="margin-top: 2000px;">
     <h3>Nepali Date Picker</h3>
     <NepaliDatePicker v-model="selectedDate" placeholder="Select a date" />
     <p v-if="selectedDate">Selected date: {{ selectedDate }}</p>
