@@ -126,12 +126,17 @@
                   v-if="calendarDays.prevRemainingDays > 0"
                   v-for="(day, d) in calendarDays.prevMonth.days"
                   :key="d"
-                  class="calendar__day not_current_month"
+                  class="calendar__day calendar__not_current_month"
                   :title="
                     getFullDate(calendarDays.prevMonth, day).format(
                       'YYYY-MM-DD'
                     )
                   "
+                  :class="{
+                    calendar__disable_date: isDateDisabled(
+                      getFullDate(calendarDays.prevMonth, day)
+                    ),
+                  }"
                   @click="select(getFullDate(calendarDays.prevMonth, day))"
                 >
                   <span>{{ day }}</span>
@@ -142,10 +147,13 @@
                   :key="d"
                   class="calendar__day"
                   :class="{
-                    selected: activeDay(
+                    calendar__selected: activeDay(
                       getFullDate(calendarDays.currentMonth, day)
                     ),
-                    today: checkToday(
+                    calendar__today: checkToday(
+                      getFullDate(calendarDays.currentMonth, day)
+                    ),
+                    calendar__disable_date: isDateDisabled(
                       getFullDate(calendarDays.currentMonth, day)
                     ),
                   }"
@@ -163,12 +171,17 @@
                   v-if="calendarDays.remainingDays > 0"
                   v-for="(day, d) in calendarDays.nextMonth.days"
                   :key="d"
-                  class="calendar__day not_current_month"
+                  class="calendar__day calendar__not_current_month"
                   :title="
                     getFullDate(calendarDays.nextMonth, day).format(
                       'YYYY-MM-DD'
                     )
                   "
+                  :class="{
+                    calendar__disable_date: isDateDisabled(
+                      getFullDate(calendarDays.nextMonth, day)
+                    ),
+                  }"
                   @click="select(getFullDate(calendarDays.nextMonth, day))"
                 >
                   <span>{{ day }}</span>
@@ -179,7 +192,7 @@
               <div
                 v-for="(month, index) in MONTH_EN"
                 class="calendar_month"
-                :class="{ selected: activeMonth(index) }"
+                :class="{ calendar__selected: activeMonth(index) }"
                 @click="selectMonth(index)"
               >
                 {{ month }}
@@ -189,7 +202,7 @@
               <div
                 v-for="year in currentPageYears"
                 class="calendar__year"
-                :class="{ selected: activeYear(year) }"
+                :class="{ calendar__selected: activeYear(year) }"
                 @click="selectYear(year)"
               >
                 {{ year }}
@@ -203,7 +216,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onUnmounted, watch } from "vue";
+import { ref, computed, onUnmounted, watch, onMounted } from "vue";
 import {
   NepaliDate,
   MONTH_EN,
@@ -232,6 +245,14 @@ const props = defineProps({
   placeholder: {
     type: String,
     default: "",
+  },
+  minDate: {
+    type: String,
+    required: false,
+  },
+  maxDate: {
+    type: String,
+    required: false,
   },
 });
 
@@ -264,6 +285,15 @@ const endingYear = ref(NEPALI_DATE_MAP.length + NEPALI_DATE_MAP[0].year - 1);
 const currentYearPage = ref(0);
 const YEARS_PER_PAGE = 10;
 
+const minDate = ref<NepaliDate>();
+const allowCheckMinDate = ref(false);
+const maxDate = ref<NepaliDate>();
+const allowCheckMaxDate = ref(false);
+
+onMounted(() => {
+  checkMinMax();
+});
+
 //Props Value Watch
 watch(
   () => props.modelValue,
@@ -281,6 +311,53 @@ watch(
   }
 );
 
+watch(
+  () => props.minDate,
+  () => {
+    checkMinMax();
+  }
+);
+
+watch(
+  () => props.maxDate,
+  () => {
+    checkMinMax();
+  }
+);
+
+const checkMinMax = () => {
+  if (props.minDate) {
+    try {
+      minDate.value = new NepaliDate(props.minDate);
+      allowCheckMinDate.value = true;
+    } catch (e) {
+      minDate.value = null as NepaliDate;
+      console.error("Invalid Minimum Date", e);
+      allowCheckMinDate.value = false;
+    }
+  }
+  if (props.maxDate) {
+    try {
+      maxDate.value = new NepaliDate(props.maxDate);
+      allowCheckMaxDate.value = true;
+    } catch (e) {
+      console.error("Invalid Maximum Date", e);
+      allowCheckMaxDate.value = false;
+    }
+  }
+
+  if (allowCheckMaxDate.value && allowCheckMinDate.value) {
+    if (minDate.value.isAfter(maxDate.value)) {
+      console.error("Minimum Date is Greater than Maximum Date");
+      allowCheckMaxDate.value = false;
+      allowCheckMinDate.value = false;
+    } else if (minDate.value.isEqual(maxDate.value)) {
+      console.error("Minimum Date is Equal to Maximum Date");
+      allowCheckMaxDate.value = false;
+      allowCheckMinDate.value = false;
+    }
+  }
+};
 
 const calendarDays = computed(() => {
   const calDays = NepaliDate.getCalendarDays(date.value.year, date.value.month);
@@ -311,6 +388,8 @@ const toggleYear = () => {
     currentYearPage.value = Math.floor(yearIndex / YEARS_PER_PAGE);
   }
 };
+
+//todo: Set the Value Next to Min date or previous to max date if today is also in disable list
 const toggleCalendar = (onlyOpen?: Boolean, onlyClose?: Boolean) => {
   if (onlyOpen) {
     visible.value = true;
@@ -400,6 +479,19 @@ const activeYear = (year: number) => {
   return year2 == year;
 };
 
+// Fixed Min/Max Date Validation Functions
+const isDateDisabled = (dateToCheck: NepaliDate): boolean => {
+  if (allowCheckMinDate.value && dateToCheck.isBefore(minDate.value)) {
+    return true;
+  }
+
+  if (allowCheckMaxDate.value && dateToCheck.isAfter(maxDate.value)) {
+    return true;
+  }
+
+  return false;
+};
+
 //Check Today
 const checkToday = (dateToCheck: NepaliDate): boolean => {
   const today = new NepaliDate();
@@ -454,6 +546,11 @@ const selectYear = (year: number) => {
   }
 };
 const select = (selectedDate: NepaliDate) => {
+  // Prevent selection of disabled dates
+  if (isDateDisabled(selectedDate)) {
+    return;
+  }
+
   date.value = selectedDate;
   formatedValue.value = date.value.format("YYYY-MM-DD");
   emit("update:modelValue", formatedValue.value);
@@ -468,6 +565,11 @@ const updateInputtedValue = () => {
   }
   try {
     const val = new NepaliDate(formatedValue.value);
+    if (isDateDisabled(val)) {
+      console.warn("Entered date is outside allowed range");
+      formatedValue.value = props.modelValue;
+      return;
+    }
     select(val);
   } catch (e) {
     formatedValue.value = props.modelValue;
@@ -619,19 +721,33 @@ onUnmounted(() => {
   height: 32px;
 }
 
-.calendar__day.selected,
-.calendar__day.selected.today,
-.calendar_month.selected,
-.calendar__year.selected {
+.calendar__day.calendar__selected,
+.calendar__day.calendar__selected.calendar__today,
+.calendar_month.calendar__selected,
+.calendar__year.calendar__selected {
   background-color: #1284e7 !important;
   color: white !important;
 }
 
-.calendar__day.today {
+.calendar__disable_date {
+  cursor: not-allowed !important;
+}
+
+.calendar__day.calendar__disable_date, .calendar__day.calendar__disable_date:hover {
+  background-color: #f3f3f3 !important;
+  color: #ccc !important;
+}
+
+.calendar__day.calendar__not_current_month.calendar__disable_date:hover {
+  background-color: white !important;
+  color: #ccc !important;
+}
+
+.calendar__day.calendar__today {
   color: #2a90e9 !important;
 }
 
-.calendar__day.not_current_month {
+.calendar__day.calendar__not_current_month {
   color: #ccc !important;
   background-color: white !important;
 }
