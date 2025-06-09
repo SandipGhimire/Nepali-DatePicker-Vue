@@ -13,6 +13,7 @@
         aria-haspopup="true"
         :id="'nepali-date-input-' + date_id"
         @keyup.enter="updateInputtedValue()"
+        :class="props.inputClass"
       />
       <div
         class="calendar-input-icon calender-icon"
@@ -254,6 +255,10 @@ const props = defineProps({
     type: String,
     required: false,
   },
+  inputClass: {
+    type: String,
+    default: "",
+  },
 });
 
 // Emit modelValue update event
@@ -389,7 +394,17 @@ const toggleYear = () => {
   }
 };
 
-//todo: Set the Value Next to Min date or previous to max date if today is also in disable list
+const setToValidDateIfTodayDisabled = () => {
+  const today = new NepaliDate();
+  if (isDateDisabled(today)) {
+    if (allowCheckMinDate.value) {
+      date.value = new NepaliDate(minDate.value.year, minDate.value.month, minDate.value.day);
+    } else if (allowCheckMaxDate.value) {
+      date.value = new NepaliDate(maxDate.value.year, maxDate.value.month, maxDate.value.day);
+    }
+  }
+};
+
 const toggleCalendar = (onlyOpen?: Boolean, onlyClose?: Boolean) => {
   if (onlyOpen) {
     visible.value = true;
@@ -399,6 +414,7 @@ const toggleCalendar = (onlyOpen?: Boolean, onlyClose?: Boolean) => {
     visible.value = !visible.value;
   }
   if (visible.value) {
+    setToValidDateIfTodayDisabled();
     document.addEventListener("click", handleClickOutside);
   } else {
     document.removeEventListener("click", handleClickOutside);
