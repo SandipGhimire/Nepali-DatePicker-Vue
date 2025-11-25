@@ -1,6 +1,6 @@
 {
   "name": "nepali-datepicker-vue",
-  "private": false,
+  "private": true,
   "version": "1.0.12",
   "type": "module",
   "files": [
