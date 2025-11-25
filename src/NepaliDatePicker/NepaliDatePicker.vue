@@ -7,12 +7,16 @@
       <input
         type="text"
         class="calendar-input"
-        @click="toggleCalendar(true)"
-        v-model="formatedValue"
+        @click="($event: any) => {
+          toggleCalendar(true);
+          $event.target.select();
+        }"
+        v-model="formattedValue"
         :placeholder="placeholder"
         aria-haspopup="true"
         :id="'nepali-date-input-' + date_id"
         @keyup.enter="updateInputtedValue()"
+        @input="handleInput"
         :class="props.inputClass"
       />
       <div
@@ -272,7 +276,7 @@ const date = ref<NepaliDate>(
   props.modelValue ? new NepaliDate(props.modelValue) : new NepaliDate()
 );
 const visible = ref(false);
-const formatedValue = ref(props.modelValue);
+const formattedValue = ref(props.modelValue);
 const yearValue = ref(
   props.modelValue
     ? new NepaliDate(props.modelValue).getYear()
@@ -303,7 +307,7 @@ onMounted(() => {
 watch(
   () => props.modelValue,
   () => {
-    formatedValue.value = props.modelValue;
+    formattedValue.value = props.modelValue;
     yearValue.value = props.modelValue
       ? new NepaliDate(props.modelValue).getYear()
       : new NepaliDate().getYear();
@@ -336,7 +340,7 @@ const checkMinMax = () => {
       minDate.value = new NepaliDate(props.minDate);
       allowCheckMinDate.value = true;
     } catch (e) {
-      minDate.value = null as NepaliDate;
+      minDate.value = undefined;
       console.error("Invalid Minimum Date", e);
       allowCheckMinDate.value = false;
     }
@@ -397,15 +401,23 @@ const toggleYear = () => {
 const setToValidDateIfTodayDisabled = () => {
   const today = new NepaliDate();
   if (isDateDisabled(today)) {
-    if (allowCheckMinDate.value) {
-      date.value = new NepaliDate(minDate.value.year, minDate.value.month, minDate.value.day);
-    } else if (allowCheckMaxDate.value) {
-      date.value = new NepaliDate(maxDate.value.year, maxDate.value.month, maxDate.value.day);
+    if (allowCheckMinDate.value && minDate.value) {
+      date.value = new NepaliDate(
+        minDate.value.year,
+        minDate.value.month,
+        minDate.value.day
+      );
+    } else if (allowCheckMaxDate.value && maxDate.value) {
+      date.value = new NepaliDate(
+        maxDate.value.year,
+        maxDate.value.month,
+        maxDate.value.day
+      );
     }
   }
 };
 
-const toggleCalendar = (onlyOpen?: Boolean, onlyClose?: Boolean) => {
+const toggleCalendar = (onlyOpen?: boolean, onlyClose?: boolean) => {
   if (onlyOpen) {
     visible.value = true;
   } else if (onlyClose) {
@@ -497,11 +509,19 @@ const activeYear = (year: number) => {
 
 // Fixed Min/Max Date Validation Functions
 const isDateDisabled = (dateToCheck: NepaliDate): boolean => {
-  if (allowCheckMinDate.value && dateToCheck.isBefore(minDate.value)) {
+  if (
+    allowCheckMinDate.value &&
+    minDate.value &&
+    dateToCheck.isBefore(minDate.value)
+  ) {
     return true;
   }
 
-  if (allowCheckMaxDate.value && dateToCheck.isAfter(maxDate.value)) {
+  if (
+    allowCheckMaxDate.value &&
+    maxDate.value &&
+    dateToCheck.isAfter(maxDate.value)
+  ) {
     return true;
   }
 
@@ -541,7 +561,7 @@ const random = (length: number) => {
   }
   return result;
 };
-const date_id = random(3) + random(3) + random(3);
+const date_id = random(5) + random(5) + random(5);
 
 //Select | Set Functions
 const setMonthAndYear = (month: number, year: number): void => {
@@ -561,35 +581,157 @@ const selectYear = (year: number) => {
     showMonth.value = true;
   }
 };
-const select = (selectedDate: NepaliDate) => {
+const select = (selectedDate: NepaliDate, dontClose: boolean = false) => {
   // Prevent selection of disabled dates
   if (isDateDisabled(selectedDate)) {
     return;
   }
 
   date.value = selectedDate;
-  formatedValue.value = date.value.format("YYYY-MM-DD");
-  emit("update:modelValue", formatedValue.value);
-  emit("onSelect", formatedValue.value);
-  toggleCalendar();
+  formattedValue.value = date.value.format("YYYY-MM-DD");
+  emit("update:modelValue", formattedValue.value);
+  emit("onSelect", formattedValue.value);
+  if (!dontClose) toggleCalendar();
 };
 
 //Update Function
-const updateInputtedValue = () => {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(formatedValue.value)) {
-    formatedValue.value = props.modelValue;
+const updateInputtedValue = (dontClose: boolean = false) => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(formattedValue.value)) {
+    formattedValue.value = props.modelValue;
+    return;
   }
   try {
-    const val = new NepaliDate(formatedValue.value);
+    const val = new NepaliDate(formattedValue.value);
     if (isDateDisabled(val)) {
       console.warn("Entered date is outside allowed range");
-      formatedValue.value = props.modelValue;
+      formattedValue.value = props.modelValue;
       return;
     }
-    select(val);
+    select(val, dontClose);
   } catch (e) {
-    formatedValue.value = props.modelValue;
+    formattedValue.value = props.modelValue;
   }
+};
+
+const handleInput = (e: any) => {
+  const rawInput = e.target.value.replace(/[^0-9]/g, "").slice(0, 9);
+  let raw = rawInput;
+
+  let year = "";
+  let month = "";
+  let day = "";
+
+  let maxDay = 31;
+
+  // ---- Year ----
+  if (raw.length >= 4) {
+    year = raw.slice(0, 4);
+  } else {
+    year = raw;
+  }
+
+  // ---- Month ----
+  if (raw.length >= 5) {
+    let m1 = raw.charAt(4);
+    let m2 = raw.charAt(5) || "";
+
+    if (m1 === "0") {
+      month = m1 + m2;
+    } else if (m1 === "1") {
+      if (["0", "1", "2"].includes(m2)) {
+        month = m1 + m2;
+      } else if (m2) {
+        month = "0" + m1;
+        raw = raw.slice(0, 5) + m2 + raw.slice(6);
+      } else {
+        month = m1;
+      }
+    } else if ("23456789".includes(m1)) {
+      month = "0" + m1;
+    }
+
+    if (month === "00") {
+      month = "0" + "";
+    }
+  }
+
+  if (/^\d{4}$/.test(year) && /^\d{2}$/.test(month)) {
+    let maxDayDate = date.value.endOfMonth();
+    maxDay = maxDayDate.day;
+  }
+
+  // ---- Day ----
+  if (raw.length >= 7) {
+    let d1 = raw.charAt(6);
+    let d2 = raw.charAt(7) || "";
+    let d3 = raw.charAt(8) || "";
+
+    if (!d3) {
+      if ("123456789".includes(d1)) {
+        day = "0" + d1;
+      }
+    } else {
+      if (d1 == 0) {
+        let dayNum = parseInt(d2 + d3);
+        if (dayNum >= 1 && dayNum <= maxDay) {
+          day = d2 + d3;
+        } else {
+          day = d1 + d2;
+        }
+      } else {
+        day = d1 + d2;
+      }
+    }
+
+    if (day === "00" || parseInt(day) > maxDay) {
+      day = "";
+    }
+  }
+
+  if (/^\d{4}$/.test(year)) {
+    let tempYear = parseInt(year);
+    try {
+      if (
+        (minDate.value && tempYear < minDate.value.year) ||
+        (maxDate.value && tempYear > maxDate.value.year)
+      ) {
+        throw Error("Check Fail");
+      }
+      date.value.setYear(tempYear);
+    } catch (e) {
+      year = "";
+    }
+  }
+
+  if (/^\d{2}$/.test(month)) {
+    let tempMonth = parseInt(month) - 1;
+    try {
+      if (
+        (minDate.value && tempMonth < minDate.value.month) ||
+        (maxDate.value && tempMonth > maxDate.value.month)
+      ) {
+        throw Error("Check Fail");
+      }
+      date.value.setMonth(tempMonth);
+    } catch (e) {
+      month = "";
+    }
+  }
+
+  // ---- Combine formatted string ----
+  let formatted = year;
+  if (month) {
+    formatted += "-" + month;
+  }
+  if (day) {
+    formatted += "-" + day;
+  }
+
+  // ---- Set back to input ----
+  e.target.value = formatted;
+
+  if (formattedValue.value == formatted) return;
+  formattedValue.value = formatted;
 };
 
 //Event Listeners
@@ -605,6 +747,7 @@ const handleClickOutside = (event: Event) => {
     visible.value = false;
     reset();
     document.removeEventListener("click", handleClickOutside);
+    updateInputtedValue(true);
   }
 };
 
@@ -749,7 +892,14 @@ onUnmounted(() => {
   cursor: not-allowed !important;
 }
 
-.calendar__day.calendar__disable_date, .calendar__day.calendar__disable_date:hover {
+.calendar__day.calendar__disable_date,
+.calendar__day.calendar__disable_date:hover {
+  background-color: #f3f3f3 !important;
+  color: #ccc !important;
+}
+
+.calendar__day.calendar__not_current_month.calendar__disable_date,
+.calendar__day.calendar__not_current_month.calendar__disable_date:hover {
   background-color: #f3f3f3 !important;
   color: #ccc !important;
 }
