@@ -1,4 +1,4 @@
-import NepaliDatePicker from "./NepaliDatePicker/NepaliDatePicker.vue";
+import NepaliDatePicker, { NepaliDatePickerProps } from "./NepaliDatePicker/NepaliDatePicker.vue";
 
-export { NepaliDatePicker };
+export { NepaliDatePicker, NepaliDatePickerProps };
 export default NepaliDatePicker;

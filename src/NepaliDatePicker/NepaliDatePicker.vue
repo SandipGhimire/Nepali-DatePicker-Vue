@@ -195,46 +195,29 @@
 import { ref, computed, onUnmounted, watch, onMounted, nextTick } from "vue";
 import { NepaliDate, MONTH_EN, WEEK_SHORT_EN, NEPALI_DATE_MAP } from "nepali-date-library";
 
+export interface NepaliDatePickerProps {
+    modelValue?: string;
+    yearSelect?: boolean;
+    monthSelect?: boolean;
+    class?: string;
+    placeholder?: string;
+    minDate?: string;
+    maxDate?: string;
+    inputClass?: string;
+    clickSelect?: boolean;
+}
+
 // Props Define
-const props = defineProps({
-    modelValue: {
-        type: String,
-        default: "",
-    },
-    yearSelect: {
-        type: Boolean,
-        default: true,
-    },
-    monthSelect: {
-        type: Boolean,
-        default: true,
-    },
-    class: {
-        type: String,
-        default: "",
-    },
-    placeholder: {
-        type: String,
-        default: "",
-    },
-    minDate: {
-        type: String,
-        required: false,
-        default: "",
-    },
-    maxDate: {
-        type: String,
-        required: false,
-        default: "",
-    },
-    inputClass: {
-        type: String,
-        default: "",
-    },
-    clickSelect: {
-        type: Boolean,
-        default: false,
-    },
+const props = withDefaults(defineProps<NepaliDatePickerProps>(), {
+    modelValue: "",
+    yearSelect: true,
+    monthSelect: true,
+    class: "",
+    placeholder: "",
+    minDate: "",
+    maxDate: "",
+    inputClass: "",
+    clickSelect: false,
 });
 
 // Emit modelValue update event
