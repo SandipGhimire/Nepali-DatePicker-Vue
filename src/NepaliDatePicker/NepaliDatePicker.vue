@@ -14,6 +14,7 @@
         :id="'nepali-date-input-' + date_id"
         @keyup.enter="updateInputtedValue()"
         :class="props.inputClass"
+        @input="onInputValueChange"
       />
       <div
         class="calendar-input-icon calender-icon"
@@ -64,17 +65,17 @@
         <div class="calendar__body">
           <!-- month -->
           <div class="calendar__head">
-            <div>
-              <button class="calendar__toggle_button" @click="prevYear()">
+            <div class="calendar__toggle_button_list">
+              <div class="calendar__toggle_button" @click="prevYear()">
                 <i class="calendar-icon-double-left"></i>
-              </button>
-              <button
+              </div>
+              <div
                 class="calendar__toggle_button"
                 @click="prev()"
                 v-if="!showMonth && !showYear"
               >
                 <i class="calendar-icon-left"></i>
-              </button>
+              </div>
             </div>
             <div class="calendar__header_label">
               <a v-if="!monthSelect">{{ date.format("MMMM") }}</a>
@@ -96,17 +97,17 @@
                 {{ currentPageYears[currentPageYears.length - 1] }}</a
               >
             </div>
-            <div>
-              <button
+            <div class="calendar__toggle_button_list">
+              <div
                 class="calendar__toggle_button"
                 @click="next()"
                 v-if="!showMonth && !showYear"
               >
                 <i class="calendar-icon-right"></i>
-              </button>
-              <button class="calendar__toggle_button" @click="nextYear()">
+              </div>
+              <div class="calendar__toggle_button" @click="nextYear()">
                 <i class="calendar-icon-double-right"></i>
-              </button>
+              </div>
             </div>
           </div>
           <!-- week days -->
@@ -137,10 +138,16 @@
                     calendar__disable_date: isDateDisabled(
                       getFullDate(calendarDays.prevMonth, day)
                     ),
+                    calendar__not_current_month_saturday: isSaturday(
+                      getFullDate(calendarDays.prevMonth, day)
+                    ) && highlightSaturday,
                   }"
                   @click="select(getFullDate(calendarDays.prevMonth, day))"
                 >
                   <span>{{ day }}</span>
+                  <span v-if="miniEnglishDate" class="calendar__english_day">{{
+                    getEnglishDay(getFullDate(calendarDays.currentMonth, day))
+                  }}</span>
                 </div>
 
                 <div
@@ -157,6 +164,9 @@
                     calendar__disable_date: isDateDisabled(
                       getFullDate(calendarDays.currentMonth, day)
                     ),
+                    calendar__saturday: isSaturday(
+                      getFullDate(calendarDays.currentMonth, day)
+                    ) && highlightSaturday,
                   }"
                   :title="
                     getFullDate(calendarDays.currentMonth, day).format(
@@ -166,6 +176,9 @@
                   @click="select(getFullDate(calendarDays.currentMonth, day))"
                 >
                   <span>{{ day }}</span>
+                  <span v-if="miniEnglishDate" class="calendar__english_day">{{
+                    getEnglishDay(getFullDate(calendarDays.currentMonth, day))
+                  }}</span>
                 </div>
 
                 <div
@@ -182,18 +195,27 @@
                     calendar__disable_date: isDateDisabled(
                       getFullDate(calendarDays.nextMonth, day)
                     ),
+                    calendar__not_current_month_saturday: isSaturday(
+                      getFullDate(calendarDays.nextMonth, day)
+                    ) && highlightSaturday,
                   }"
                   @click="select(getFullDate(calendarDays.nextMonth, day))"
                 >
                   <span>{{ day }}</span>
+                  <span v-if="miniEnglishDate" class="calendar__english_day">{{
+                    getEnglishDay(getFullDate(calendarDays.currentMonth, day))
+                  }}</span>
                 </div>
               </div>
             </div>
             <div v-if="showMonth" class="calendar__months" @click.stop>
               <div
                 v-for="(month, index) in MONTH_EN"
-                class="calendar_month"
-                :class="{ calendar__selected: activeMonth(index) }"
+                class="calendar__month"
+                :class="{
+                  calendar__selected: activeMonth(index),
+                  calendar__current_month: checkCurrentMonth(index),
+                }"
                 @click="selectMonth(index)"
               >
                 {{ month }}
@@ -203,7 +225,10 @@
               <div
                 v-for="year in currentPageYears"
                 class="calendar__year"
-                :class="{ calendar__selected: activeYear(year) }"
+                :class="{
+                  calendar__selected: activeYear(year),
+                  calendar__current_year: checkCurrentYear(year),
+                }"
                 @click="selectYear(year)"
               >
                 {{ year }}
@@ -259,6 +284,22 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  updateOnInputChange: {
+    type: Boolean,
+    default: false,
+  },
+  autoFormat: {
+    type: Boolean,
+    default: false,
+  },
+  miniEnglishDate: {
+    type: Boolean,
+    default: false,
+  },
+  highlightSaturday: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Emit modelValue update event
@@ -294,6 +335,7 @@ const minDate = ref<NepaliDate>();
 const allowCheckMinDate = ref(false);
 const maxDate = ref<NepaliDate>();
 const allowCheckMaxDate = ref(false);
+const isFormattedValueChanges = ref(false);
 
 onMounted(() => {
   checkMinMax();
@@ -380,6 +422,15 @@ const getFullDate = (data: fullDate, day: number): NepaliDate => {
   return date;
 };
 
+const getEnglishDay = (date: NepaliDate) => {
+  return date.getEnglishDate().getDate();
+};
+
+const isSaturday = (date: NepaliDate): boolean => {
+  const englishDate = date.getEnglishDate();
+  return englishDate.getDay() === 6;
+};
+
 //Togglers
 const toggleYear = () => {
   showYear.value = !showYear.value;
@@ -398,9 +449,17 @@ const setToValidDateIfTodayDisabled = () => {
   const today = new NepaliDate();
   if (isDateDisabled(today)) {
     if (allowCheckMinDate.value) {
-      date.value = new NepaliDate(minDate.value.year, minDate.value.month, minDate.value.day);
+      date.value = new NepaliDate(
+        minDate.value.year,
+        minDate.value.month,
+        minDate.value.day
+      );
     } else if (allowCheckMaxDate.value) {
-      date.value = new NepaliDate(maxDate.value.year, maxDate.value.month, maxDate.value.day);
+      date.value = new NepaliDate(
+        maxDate.value.year,
+        maxDate.value.month,
+        maxDate.value.day
+      );
     }
   }
 };
@@ -419,6 +478,9 @@ const toggleCalendar = (onlyOpen?: Boolean, onlyClose?: Boolean) => {
   } else {
     document.removeEventListener("click", handleClickOutside);
     reset();
+  }
+  if (isFormattedValueChanges.value) {
+    isFormattedValueChanges.value = false;
   }
 };
 const toggleMonth = () => {
@@ -518,6 +580,19 @@ const checkToday = (dateToCheck: NepaliDate): boolean => {
   );
 };
 
+//Check Current Year
+const checkCurrentYear = (year: number) => {
+  const currentYear = new NepaliDate().year;
+  return year === currentYear;
+};
+
+//Check Current Month
+const checkCurrentMonth = (month: number) => {
+  const currentMonth = new NepaliDate().month;
+  const currentYear = new NepaliDate().year;
+  return month === currentMonth && currentYear === date.value.year;
+};
+
 //Year Picker
 const currentPageYears = computed(() => {
   const years = NEPALI_DATE_MAP.map((item) => item.year);
@@ -561,7 +636,10 @@ const selectYear = (year: number) => {
     showMonth.value = true;
   }
 };
-const select = (selectedDate: NepaliDate) => {
+const select = (
+  selectedDate: NepaliDate,
+  shallTriggerClose: boolean = true
+) => {
   // Prevent selection of disabled dates
   if (isDateDisabled(selectedDate)) {
     return;
@@ -569,13 +647,13 @@ const select = (selectedDate: NepaliDate) => {
 
   date.value = selectedDate;
   formatedValue.value = date.value.format("YYYY-MM-DD");
-  emit("update:modelValue", formatedValue.value);
-  emit("onSelect", formatedValue.value);
-  toggleCalendar();
+  updateValue(formatedValue.value);
+  if (shallTriggerClose) toggleCalendar();
 };
 
 //Update Function
-const updateInputtedValue = () => {
+const updateInputtedValue = (shallTriggerClose: boolean = true) => {
+  if (!isFormattedValueChanges.value) return;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(formatedValue.value)) {
     formatedValue.value = props.modelValue;
   }
@@ -586,10 +664,15 @@ const updateInputtedValue = () => {
       formatedValue.value = props.modelValue;
       return;
     }
-    select(val);
+    select(val, shallTriggerClose);
   } catch (e) {
     formatedValue.value = props.modelValue;
   }
+};
+const updateValue = (date: string) => {
+  if (date === props.modelValue) return;
+  emit("update:modelValue", date);
+  emit("onSelect", date);
 };
 
 //Event Listeners
@@ -605,6 +688,7 @@ const handleClickOutside = (event: Event) => {
     visible.value = false;
     reset();
     document.removeEventListener("click", handleClickOutside);
+    updateInputtedValue(false);
   }
 };
 
@@ -620,10 +704,34 @@ const resetClear = () => {
   showMonth.value = false;
   showYear.value = false;
   date.value = new NepaliDate();
-  emit("update:modelValue", "");
-  emit("onSelect", "");
+  updateValue("");
   toggleCalendar(false, true);
 };
+
+const onInputValueChange = (e: any) => {
+  let raw = e.target.value.replace(/[^0-9-]/g, "");
+
+  let formatted = "";
+  for (let i = 0; i < raw.length && formatted.length < 10; i++) {
+    formatted += raw[i];
+    if ((i === 3 || i === 5) && i !== raw.length - 1) {
+      formatted += "-";
+    }
+  }
+
+  e.target.value = formatted;
+  formatedValue.value = formatted;
+};
+
+watch(
+  () => formatedValue.value,
+  (newVal) => {
+    isFormattedValueChanges.value = true;
+    if (props.updateOnInputChange && /^\d{4}-\d{2}-\d{2}$/.test(newVal)) {
+      updateInputtedValue(false);
+    }
+  }
+);
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
@@ -723,6 +831,7 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   height: 32px;
+  border-radius: 4px;
 }
 
 .calendar__day_spacer {
@@ -739,7 +848,10 @@ onUnmounted(() => {
 
 .calendar__day.calendar__selected,
 .calendar__day.calendar__selected.calendar__today,
-.calendar_month.calendar__selected,
+.calendar__day.calendar__selected.calendar__saturday,
+.calendar__selected.calendar__year.calendar__current_year,
+.calendar__month.calendar__selected,
+.calendar__month.calendar__selected.calendar__current_month,
 .calendar__year.calendar__selected {
   background-color: #1284e7 !important;
   color: white !important;
@@ -749,7 +861,8 @@ onUnmounted(() => {
   cursor: not-allowed !important;
 }
 
-.calendar__day.calendar__disable_date, .calendar__day.calendar__disable_date:hover {
+.calendar__day.calendar__disable_date,
+.calendar__day.calendar__disable_date:hover {
   background-color: #f3f3f3 !important;
   color: #ccc !important;
 }
@@ -759,8 +872,17 @@ onUnmounted(() => {
   color: #ccc !important;
 }
 
-.calendar__day.calendar__today {
+.calendar__day.calendar__today,
+.calendar__year.calendar__current_year,
+.calendar__month.calendar__current_month {
   color: #2a90e9 !important;
+}
+
+.calendar__day.calendar__saturday:not(.calendar__today):not(.calendar__selected) {
+  color: red !important;
+}
+.calendar__day.calendar__not_current_month_saturday:not(.calendar__today) {
+  color: rgba(255, 0, 0, 0.507) !important;
 }
 
 .calendar__day.calendar__not_current_month {
@@ -770,9 +892,17 @@ onUnmounted(() => {
 
 .calendar__day:hover,
 .calendar__year:hover,
-.calendar_month:hover {
+.calendar__month:hover {
   background-color: #f3f9fe;
   color: #73879c;
+}
+
+.calendar__english_day {
+  font-size: 8px;
+  display: block;
+  margin-bottom: -8px;
+  margin-right: -3px;
+  margin-left: 2px;
 }
 
 .calendar__weeks,
@@ -797,7 +927,7 @@ onUnmounted(() => {
   text-align: center;
 }
 
-.calendar_month,
+.calendar__month,
 .calendar__year {
   display: flex;
   justify-content: center;
@@ -810,7 +940,7 @@ onUnmounted(() => {
   height: 45px;
 }
 
-.calendar_month {
+.calendar__month {
   height: 56px;
 }
 
@@ -827,6 +957,10 @@ onUnmounted(() => {
   background: white;
   cursor: pointer;
   padding: 0 4px;
+}
+
+.calendar__toggle_button_list {
+  display: flex;
 }
 
 /* Animation CSS */

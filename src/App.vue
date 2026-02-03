@@ -9,7 +9,7 @@
 <template>
   <div style="padding: 24px; max-width: 400px;">
     <h2>Default Nepali Date Picker</h2>
-    <NepaliDatePicker v-model="date1" />
+    <NepaliDatePicker v-model="date1" @onSelect="console.log($event)" :updateOnInputChange="true" :miniEnglishDate="true" :autoFormat="true"/>
 
     <h2>With minDate</h2>
     <NepaliDatePicker v-model="date2" :minDate="minDate" />
