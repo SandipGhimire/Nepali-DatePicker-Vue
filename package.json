@@ -1,7 +1,7 @@
 {
     "name": "nepali-datepicker-vue",
     "private": true,
-    "version": "1.0.12",
+    "version": "1.0.13",
     "type": "module",
     "files": [
         "dist"
@@ -45,17 +45,17 @@
     },
     "devDependencies": {
         "@eslint/js": "^9.39.2",
-        "@types/node": "^25.0.10",
+        "@types/node": "^25.2.0",
         "@typescript-eslint/eslint-plugin": "^8.54.0",
         "@typescript-eslint/parser": "^8.54.0",
-        "@vitejs/plugin-vue": "^6.0.3",
+        "@vitejs/plugin-vue": "^6.0.4",
         "@vue/eslint-config-prettier": "^10.2.0",
         "@vue/eslint-config-typescript": "^14.6.0",
         "@vue/tsconfig": "^0.8.1",
         "eslint": "^9.39.2",
         "eslint-plugin-prettier": "^5.5.5",
         "eslint-plugin-vue": "^10.7.0",
-        "globals": "^17.1.0",
+        "globals": "^17.3.0",
         "path": "^0.12.7",
         "prettier": "^3.8.1",
         "typescript": "~5.9.3",
