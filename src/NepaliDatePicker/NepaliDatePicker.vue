@@ -1,5 +1,12 @@
 <template>
-  <div class="nepali-datepicker" :key="date_id" :class="props.class">
+  <div
+    class="nepali-datepicker"
+    :key="date_id"
+    :class="props.class"
+    :id="id"
+    @focusin="triggerClickOpen()"
+    tabindex="0"
+  >
     <div class="calendar-input-div" :class="modelValue ? 'calendar-input-contain-value' : ''">
       <input
         type="text"
@@ -12,6 +19,7 @@
         @keyup.enter="updateInputtedValue()"
         @input="handleInput"
         :class="props.inputClass"
+        :readonly="!allowTyping"
       />
       <div class="calendar-input-icon calendar-icon" @click.stop="triggerClickOpen()">
         <svg
@@ -193,6 +201,7 @@ import { ref, computed, onUnmounted, watch, onMounted, nextTick } from "vue";
 import { NepaliDate, MONTH_EN, WEEK_SHORT_EN, NEPALI_DATE_MAP } from "nepali-date-library";
 
 export interface NepaliDatePickerProps {
+  id?: string;
   modelValue?: string;
   yearSelect?: boolean;
   monthSelect?: boolean;
@@ -206,10 +215,12 @@ export interface NepaliDatePickerProps {
   autoFormat?: boolean;
   miniEnglishDate?: boolean;
   highlightSaturday?: boolean;
+  allowTyping?: boolean;
 }
 
 // Props Define
 const props = withDefaults(defineProps<NepaliDatePickerProps>(), {
+  id: "",
   modelValue: "",
   yearSelect: true,
   monthSelect: true,
@@ -223,6 +234,7 @@ const props = withDefaults(defineProps<NepaliDatePickerProps>(), {
   autoFormat: true,
   miniEnglishDate: false,
   highlightSaturday: false,
+  allowTyping: true,
 });
 
 // Emit modelValue update event
@@ -306,7 +318,7 @@ watch(
 
 const triggerClickOpen = () => {
   toggleCalendar(true);
-  if (props.clickSelect) {
+  if (props.clickSelect && props.allowTyping) {
     (document.getElementById("nepali-date-input-" + date_id) as HTMLInputElement)?.select();
   }
 };
@@ -470,7 +482,9 @@ const toggleCalendar = (onlyOpen?: boolean, onlyClose?: boolean) => {
       window.addEventListener("scroll", calculateCalendarPosition, true);
       window.addEventListener("resize", calculateCalendarPosition);
     });
-    document.addEventListener("click", handleClickOutside);
+    setTimeout(() => {
+      document.addEventListener("click", handleClickOutside);
+    }, 0);
   } else {
     document.removeEventListener("click", handleClickOutside);
 

@@ -8,7 +8,10 @@
       :clickSelect="true"
       :updateOnInputChange="true"
       :autoFormat="false"
+      :allowTyping="false"
+      id="testing-nepali-calendar"
     />
+    <button @click="focusElement">On Focus</button>
 
     <h2>With minDate</h2>
     <NepaliDatePicker v-model="date2" :minDate="minDate" />
@@ -78,6 +81,10 @@ const maxDate = new NepaliDate().addDays(3).format("YYYY-MM-DD");
 
 function onSelect(val: string) {
   lastOnSelect.value = val;
+}
+
+function focusElement() {
+  document.getElementById("testing-nepali-calendar").focus();
 }
 </script>
 
