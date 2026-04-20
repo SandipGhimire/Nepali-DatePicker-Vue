@@ -20,14 +20,15 @@
         @input="handleInput"
         :class="props.inputClass"
         :readonly="!allowTyping"
+        :disabled="disabled"
       />
-      <div class="calendar-input-icon calendar-icon" @click.stop="triggerClickOpen()">
+      <div class="calendar-input-icon" :class="disabled ? '' : 'calendar-icon'" @click.stop="triggerClickOpen()">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1024 1024"
           width="1em"
           height="1em"
-          v-if="!(visible && modelValue)"
+          v-if="!(visible && modelValue) || disabled"
         >
           <path
             d="M940.218 107.055H730.764v-60.51H665.6v60.51H363.055v-60.51H297.89v60.51H83.78c-18.617 0-32.581 13.963-32.581 32.581v805.237c0 18.618 13.964 32.582 32.582 32.582h861.09c18.619 0 32.583-13.964 32.583-32.582V139.636c-4.655-18.618-18.619-32.581-37.237-32.581zm-642.327 65.163v60.51h65.164v-60.51h307.2v60.51h65.163v-60.51h176.873v204.8H116.364v-204.8H297.89zM116.364 912.291V442.18H912.29v470.11H116.364z"
@@ -38,7 +39,7 @@
         class="calendar-input-icon"
         :class="visible ? '' : 'calendar-clear-input'"
         @click.stop="resetClear()"
-        v-if="modelValue"
+        v-if="modelValue && !disabled"
       >
         <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -58,6 +59,7 @@
           :class="['calendar', { show: visible, 'calendar-above': positionAbove }]"
           :id="'nepali-calendar-' + date_id"
           :style="calendarStyle"
+          ref="calendarRef"
           style="user-select: none"
         >
           <div class="calendar__body">
@@ -216,6 +218,7 @@ export interface NepaliDatePickerProps {
   miniEnglishDate?: boolean;
   highlightSaturday?: boolean;
   allowTyping?: boolean;
+  disabled?: boolean;
 }
 
 // Props Define
@@ -235,6 +238,7 @@ const props = withDefaults(defineProps<NepaliDatePickerProps>(), {
   miniEnglishDate: false,
   highlightSaturday: false,
   allowTyping: true,
+  disabled: false,
 });
 
 // Emit modelValue update event
@@ -265,6 +269,7 @@ const isFormattedValueChanges = ref(false);
 const calendarTop = ref(0);
 const calendarLeft = ref(0);
 const positionAbove = ref(false);
+const calendarRef = ref<HTMLElement | null>(null);
 
 const SPACING = 1;
 
@@ -317,6 +322,7 @@ watch(
 );
 
 const triggerClickOpen = () => {
+  if (props.disabled) return;
   toggleCalendar(true);
   if (props.clickSelect && props.allowTyping) {
     (document.getElementById("nepali-date-input-" + date_id) as HTMLInputElement)?.select();
@@ -370,6 +376,22 @@ const calendarStyle = computed(() => {
   };
 });
 
+// Get Calendar Natural Height
+const getCalendarNaturalHeight = (): { height: number; width: number } => {
+  const el = calendarRef.value;
+  if (!el) return { height: 267, width: 272 };
+
+  const prevTransform = el.style.transform;
+  el.style.transform = "none";
+
+  const height = el.scrollHeight;
+  const width = el.scrollWidth;
+
+  el.style.transform = prevTransform;
+
+  return { height, width };
+};
+
 // Calculate calendar position
 const calculateCalendarPosition = () => {
   const inputElement = document.getElementById("nepali-date-input-" + date_id);
@@ -378,12 +400,14 @@ const calculateCalendarPosition = () => {
   if (!inputElement || !calendarElement) return;
 
   const inputRect = inputElement.getBoundingClientRect();
-  const calendarRect = calendarElement.getBoundingClientRect();
   const viewportHeight = window.innerHeight;
   const viewportWidth = window.innerWidth;
 
-  const calendarHeight = calendarRect.height || 267;
-  const calendarWidth = calendarRect.width || 272;
+  const { height, width } = getCalendarNaturalHeight();
+  console.log(height, width);
+
+  const calendarHeight = height;
+  const calendarWidth = width;
 
   const spaceAbove = inputRect.top;
   const spaceBelow = viewportHeight - inputRect.bottom;
@@ -392,7 +416,7 @@ const calculateCalendarPosition = () => {
   positionAbove.value = shouldPlaceAbove;
 
   if (shouldPlaceAbove) {
-    calendarTop.value = inputRect.top + window.scrollY - calendarHeight - SPACING;
+    calendarTop.value = inputRect.top + window.scrollY - calendarHeight - SPACING - 1;
 
     if (calendarTop.value < window.scrollY) {
       calendarTop.value = window.scrollY + SPACING;

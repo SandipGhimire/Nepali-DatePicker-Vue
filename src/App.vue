@@ -10,6 +10,7 @@
       :autoFormat="false"
       :allowTyping="false"
       id="testing-nepali-calendar"
+      :disabled="true"
     />
     <button @click="focusElement">On Focus</button>
 
@@ -64,7 +65,7 @@ import { ref } from "vue";
 import NepaliDatePicker from "./NepaliDatePicker/NepaliDatePicker.vue";
 import { NepaliDate } from "nepali-date-library";
 
-const date1 = ref("");
+const date1 = ref("2083-01-10");
 const date2 = ref("");
 const date3 = ref("");
 const date4 = ref("");
