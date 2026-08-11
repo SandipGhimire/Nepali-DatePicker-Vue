@@ -313,7 +313,7 @@ watch([showMonth, showYear], () => {
 
 watch(
   () => formattedValue.value,
-  (newVal) => {
+  (newVal: string) => {
     isFormattedValueChanges.value = true;
     if (props.updateOnInputChange && /^\d{4}-\d{2}-\d{2}$/.test(newVal)) {
       updateInputtedValue(true);
@@ -474,7 +474,7 @@ const toggleYear = () => {
 
   if (showYear.value) {
     const currentYear = date.value.year;
-    const yearIndex = NEPALI_DATE_MAP.findIndex((item) => item.year === currentYear);
+    const yearIndex = NEPALI_DATE_MAP.findIndex((item: { year: number }) => item.year === currentYear);
     currentYearPage.value = Math.floor(yearIndex / YEARS_PER_PAGE);
   }
 };
@@ -617,7 +617,7 @@ const checkToday = (dateToCheck: NepaliDate): boolean => {
 
 //Year Picker
 const currentPageYears = computed(() => {
-  const years = NEPALI_DATE_MAP.map((item) => item.year);
+  const years = NEPALI_DATE_MAP.map((item: { year: number }) => item.year);
   const startIdx = currentYearPage.value * YEARS_PER_PAGE;
   return years.slice(startIdx, startIdx + YEARS_PER_PAGE);
 });
@@ -698,18 +698,11 @@ const handleInput = (e: any) => {
   const rawInput = e.target.value.replace(/[^0-9]/g, "").slice(0, 9);
   let raw = rawInput;
 
-  let year = "";
+  let year = raw.length >= 4 ? raw.slice(0, 4) : raw;
   let month = "";
   let day = "";
 
   let maxDay = 31;
-
-  // ---- Year ----
-  if (raw.length >= 4) {
-    year = raw.slice(0, 4);
-  } else {
-    year = raw;
-  }
 
   // ---- Month ----
   if (raw.length >= 5) {
